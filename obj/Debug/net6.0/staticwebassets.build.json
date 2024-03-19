@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "TcH0dEsIepOtBhF/7agVUQDPGGDl+Mq90P3vrd4L+E8=",
+  "Hash": "U6kYSb1F2liL89sbQqRBmW03G62iFrbzobX0fbw41PY=",
   "Source": "workspace",
   "BasePath": "_content/workspace",
   "Mode": "Default",
@@ -16,40 +16,6 @@
     }
   ],
   "Assets": [
-    {
-      "Identity": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/bundle/workspace.styles.css",
-      "SourceId": "workspace",
-      "SourceType": "Computed",
-      "ContentRoot": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/bundle/",
-      "BasePath": "_content/workspace",
-      "RelativePath": "workspace.styles.css",
-      "AssetKind": "All",
-      "AssetMode": "CurrentProject",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "ScopedCss",
-      "AssetTraitValue": "ApplicationBundle",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/bundle/workspace.styles.css"
-    },
-    {
-      "Identity": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/projectbundle/workspace.bundle.scp.css",
-      "SourceId": "workspace",
-      "SourceType": "Computed",
-      "ContentRoot": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/projectbundle/",
-      "BasePath": "_content/workspace",
-      "RelativePath": "workspace.bundle.scp.css",
-      "AssetKind": "All",
-      "AssetMode": "Reference",
-      "AssetRole": "Primary",
-      "RelatedAsset": "",
-      "AssetTraitName": "ScopedCss",
-      "AssetTraitValue": "ProjectBundle",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/ubuntu/workspace/obj/Debug/net6.0/scopedcss/projectbundle/workspace.bundle.scp.css"
-    },
     {
       "Identity": "/home/ubuntu/workspace/wwwroot/css/site.css",
       "SourceId": "workspace",

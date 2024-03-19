@@ -1,0 +1,444 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parking Reservation System</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    /* Custom CSS for parking spot boxes */
+    .parking-spot {
+      border: 1px solid #ccc;
+      padding: 25px 25px; 
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .parking-spot span{
+      color: #fff;
+      background-color: #dc3545;
+
+      padding-right: .6em;
+      padding-left: .6em;
+      border-radius: 10rem;
+    }
+    .nav-link{
+      color: white;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mt-5 mb-4 text-center display-2">Parking Reservation System</h1>
+    <nav class="navbar navbar-expand-lg bg-primary">
+      <div class="container-fluid">
+        <!-- <a class="navbar-brand" href="#">Navbar</a> -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor02" aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarColor02">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" id="addParking" href="#"><i class="bi bi-calendar2-plus" ></i> Add Parking Spot</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="deleteParking" href="#"><i class="bi bi-trash"></i> Delete Parking Spot</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="parkAVehicle" href="#"><i class="bi bi-car-front"></i> Book</a>
+            </li>
+            <!-- <li class="nav-item">
+              <a class="nav-link" href="#"><i class="bi bi-file-bar-graph"></i> Report</a>
+            </li> -->
+          </ul>
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" id="contextDate" type="date" placeholder="Set Date" aria-label="Search">
+            <button class="btn btn-outline-light" id="setDate" type="submit">Go</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    <div id="parking-container" class="row mt-5">
+      <p>Parking Spots </p>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="modalLabel">Modal title</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="modalAction" class="btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (Optional, if you need JavaScript functionality) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script>
+   const url = "";
+   const modal = document.getElementById("modal");
+   const modalTitle = document.getElementById("modalLabel");
+   const modalBody = modal.querySelector('.modal-body');
+   let bookings = [];
+   async function fetchAndDisplayParkingData() {
+      try {
+          const parkingData = await fetch(`${url}/api/Parking`).then(response => response.json());
+
+          const parkingContainer = document.getElementById("parking-container");
+          parkingContainer.innerHTML = ""; // Clear any existing content
+
+          const columns = 4; // Number of columns
+          let row = document.createElement("div");
+          row.classList.add("row");
+          for (const [index, spot] of parkingData.entries()) {
+
+              let plateNum = findPlateNoByParkingSpotId(bookings, spot.id);
+              const columnIndex = index % columns;
+              const columnClass = `col`;
+              let column = row.querySelector(`.${columnClass}:nth-child(${columnIndex + 1})`);
+              if (!column) {
+                  column = document.createElement("div");
+                  column.classList.add(columnClass);
+                  row.appendChild(column);
+              }
+
+              const parkingSpot = document.createElement("div");
+              parkingSpot.classList.add("parking-spot");
+              const parkingLabel = document.createElement("h3");
+              parkingLabel.textContent = spot.name;
+              parkingSpot.appendChild(parkingLabel);
+              column.appendChild(parkingSpot);
+              
+              console.log(plateNum);
+              
+              if (plateNum !== null) {
+                  const platePill = document.createElement("span");
+                  platePill.textContent = plateNum;
+                  platePill.classList.add("badge", "badge-info");
+                  parkingSpot.appendChild(platePill);
+              }
+
+              if (index % columns === columns - 1) {
+                  parkingContainer.appendChild(row);
+                  row = document.createElement("div");
+                  row.classList.add("row");
+              }
+          }
+
+          if (parkingData.length % columns !== 0) {
+              parkingContainer.appendChild(row);
+          }
+      } catch (error) {
+          console.error(error); // Handle any errors during fetching or data processing
+      }
+  }
+
+  document.getElementById("addParking").addEventListener("click", function(event) {
+        event.preventDefault();
+        modalTitle.textContent = "Add Parking Spot";
+
+        //Create form
+        modalBody.innerHTML = `
+          <form id="parkingSpotForm">
+            <div class="form-group">
+              <input type="text" class="form-control" id="parkingSpotName" placeholder="Enter new parking spot code">
+            </div>
+          </form>
+        `;
+
+        document.getElementById("parkingSpotForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+        });
+
+        document.getElementById("modalAction").classList.remove("btn-danger");
+        document.getElementById("modalAction").classList.remove("btn-primary");
+        document.getElementById("modalAction").classList.add("btn-success");
+        document.getElementById("modalAction").innerHTML = "Save";
+
+
+        // Create and append backdrop element
+        const backdrop = document.createElement("div");
+        backdrop.classList.add("modal-backdrop");
+        document.body.appendChild(backdrop);
+        backdrop.style.opacity = "0.5";
+
+        modal.classList.add("show"); // Show the modal by adding the 'show' class
+        modal.style.display = "block";
+    });
+
+    document.getElementById("parkAVehicle").addEventListener("click", function(event) {
+        event.preventDefault();
+        modalTitle.textContent = "Book Parking Spot";
+        //Create form
+        modalBody.innerHTML = `
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label for="plateNumber">Vehicle Plate Number:</label>
+                    <input type="text" class="form-control" id="plateNumber" placeholder="Enter vehicle plate number">
+                </div>
+                <div class="form-group">
+                    <label for="startTime">Start Time:</label>
+                    <input type="datetime-local" class="form-control" id="startTime">
+                </div>
+                <div class="form-group">
+                    <label for="endTime">End Time:</label>
+                    <input type="datetime-local" class="form-control" id="endTime">
+                </div>
+                <div class="form-group">
+                    <label for="price">Price:</label>
+                    <input type="number" class="form-control" id="price" placeholder="Enter price">
+                </div>
+            </form>`;
+        document.getElementById("bookingForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+        });
+
+        document.getElementById("modalAction").classList.remove("btn-danger");
+        document.getElementById("modalAction").classList.remove("btn-success");
+        document.getElementById("modalAction").classList.add("btn-primary");
+        document.getElementById("modalAction").innerHTML = "Book";
+
+
+        // Create and append backdrop element
+        const backdrop = document.createElement("div");
+        backdrop.classList.add("modal-backdrop");
+        document.body.appendChild(backdrop);
+        backdrop.style.opacity = "0.5";
+
+        modal.classList.add("show"); // Show the modal by adding the 'show' class
+        modal.style.display = "block";
+    });
+
+    function validateAndBook() {
+        const plateNumber = document.getElementById("plateNumber").value;
+        const startTime = new Date(document.getElementById("startTime").value);
+        const endTime = new Date(document.getElementById("endTime").value);
+        const price = document.getElementById("price").value;
+
+        // Validate form fields
+        if (!plateNumber || !startTime || !endTime || !price) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        // Validate start time and end time
+        if (startTime >= endTime) {
+            alert("Booking start time must be earlier than end time.");
+            return;
+        }
+
+        // If all validations pass, proceed to book
+        bookParkingSpot(plateNumber, startTime, endTime, price);
+    }
+
+    function bookParkingSpot(plateNumber, startTime, endTime, price) {
+        // Construct booking object
+        const bookingData = {
+            PlateNo: plateNumber,
+            CheckInTime: startTime.toISOString(), // Convert to ISO string format
+            CheckOutTime: endTime.toISOString(), // Convert to ISO string format
+            BookingTime: new Date().toISOString(),
+            TotalPrice: price
+        };
+
+        // Perform API call to book the parking spot
+        fetch("/api/Parking/Book", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(bookingData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to book parking spot.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error("Error booking parking spot:", error);
+            // Handle error (e.g., display error message)
+        });
+    }
+
+    document.getElementById("deleteParking").addEventListener("click", function(event) {
+        event.preventDefault();
+        modalTitle.textContent = "Delete Parking Spot";
+
+        //Create form
+        modalBody.innerHTML = `
+          <form id="parkingSpotForm">
+            <div class="form-group">
+              <input type="text" class="form-control" id="parkingSpotName" placeholder="Enter parking spot code to delete">
+            </div>
+          </form>
+        `;
+
+        document.getElementById("parkingSpotForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+        });
+
+        document.getElementById("modalAction").classList.remove("btn-success");
+        document.getElementById("modalAction").classList.remove("btn-primary");
+        document.getElementById("modalAction").classList.add("btn-danger");
+        document.getElementById("modalAction").innerHTML = "Delete";
+
+        // Create and append backdrop element
+        const backdrop = document.createElement("div");
+        backdrop.classList.add("modal-backdrop");
+        document.body.appendChild(backdrop);
+        backdrop.style.opacity = "0.5";
+
+        modal.classList.add("show"); // Show the modal by adding the 'show' class
+        modal.style.display = "block";
+    });
+
+    //Handle modal action
+    document.getElementById("modalAction").addEventListener("click", function(event) {
+      event.preventDefault(); // Prevent default form submission behavior
+
+      if(event.target.innerHTML == "Save"){
+        addSpot();
+      }else if(event.target.innerHTML == "Delete"){
+        deleteSpot();
+      }else if(event.target.innerHTML == "Book"){
+        validateAndBook();
+      }
+      
+    });
+
+    async function deleteSpot(){
+      const parkingSpotName = document.getElementById("parkingSpotName").value;
+
+      try {
+        const url = `/api/Parking/Delete/${parkingSpotName}`; // Replace with your actual API endpoint
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error deleting parking spot: ${response.statusText}`);
+        }
+
+        location.reload();
+
+        // Optionally, reload the page or update the UI to reflect the deletion
+      } catch (error) {
+        console.error("Error:", error);
+        // Handle errors appropriately, e.g., display an error message to the user
+      }
+    }
+
+    function addSpot(){
+      const parkingSpotName = document.getElementById("parkingSpotName").value;
+
+      // Perform fetch request to save the parking spot name
+      fetch("/api/Parking/New", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name: parkingSpotName })
+      })
+      .then(response => {
+        if (!response.ok) {
+          alert("Error: Parking spot already exist.")
+        }
+
+        location.reload();
+      })
+      .catch(error => {
+        console.error("Error saving parking spot:", error);
+        // Handle error (e.g., display error message)
+      });
+    }
+  
+  // Close the modal when the close button is clicked
+    modal.querySelector(".btn-close").addEventListener("click", function() {
+        const backdrop = document.querySelector(".modal-backdrop");
+        backdrop.parentNode.removeChild(backdrop); // Remove the backdrop element
+
+        modal.classList.remove("show"); // Remove the 'show' class to hide the modal
+        modal.style.display = "none"; // Set the display style to none to hide the modal
+    });
+
+    async function fetchBookingsByDate(date) {
+        try {
+            //const formattedDate = date.slice(0, 19).replace('T', ' ');
+            const response = await fetch('/api/Parking/Bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ dateStr: date })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch bookings');
+            }
+
+            bookings = await response.json();
+            
+            fetchAndDisplayParkingData();
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            throw error;
+        }
+    }
+
+  const contextDate = document.getElementById('contextDate');
+
+  document.getElementById("setDate").addEventListener("click", function(event){
+      event.preventDefault();
+      const date = new Date(contextDate.value);
+      fetchBookingsByDate(date.toISOString());
+  });
+
+
+  function findPlateNoByParkingSpotId(bookings, parkingSpotId) {
+    // Iterate through the array of bookings
+      for (let i = 0; i < bookings.length; i++) {
+          // Check if the current booking has the specified parkingSpotId
+          if (bookings[i].parkingSpotId === parkingSpotId) {
+              // Return the plateNo field
+              return bookings[i].plateNo;
+          }
+      }
+      // If no matching booking is found, return null or appropriate default value
+      return null; // or return undefined, or throw an error, depending on your use case
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+      // Get the current date
+      const currentDate = new Date();
+
+      // Format the date to "YYYY-MM-DD" for the input type="date"
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+      const day = String(currentDate.getDate()).padStart(2, '0');
+
+      // Set the value of the input to the formatted current date
+      contextDate.value = `${year}-${month}-${day}`;
+
+
+      const date = new Date(contextDate.value);
+      bookings = fetchBookingsByDate(date.toISOString());
+  });
+  </script>
+</body>
+</html>
